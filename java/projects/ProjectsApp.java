@@ -29,17 +29,17 @@ public class ProjectsApp {
 		);
 	//@formatter:on		
 
-//  Entry point for app			
- // @param args
- 
+/**
+ * Entry point for app			
+ */
 	public static void main(String[] args ) {			
 		new ProjectsApp().processUserSelections(); 
 	}
+	
 /**
  * Method that prints requests for user input then performs operations
  * and repeats until user presses 'enter' to terminate.	
- */
-	
+ */	
 	private void processUserSelections() {
 		boolean done = false;
 		
@@ -82,11 +82,110 @@ public class ProjectsApp {
 			//e.printStackTrace();
 			}
 		}	
-	}	
+	}
 
+	
+/**
+ * Method that lists projects for user to select and deletes
+ * selected project
+ */
+	private void deleteProject() {
+		listProjects();
+		
+		Integer projectId = getIntInput("Enter a project ID to delete project");
+		
+		projectService.deleteProject(projectId);	
+		System.out.println("Project" + projectId + " has been deleted successfully");
+		
+		//check to see if project id matches
+		
+		if(Objects.nonNull(curProject) && curProject.getProjectId().equals(projectId)) {
+			curProject = null;
+
+			}		
+		}	
+
+	
 	/**
-	 * Receive user input for each row 
-	 * of each column prompted in the project table	
+	* Method that calls a project from database and prompts user to update
+	* their input, then sends new input back to database with changes made	
+	*/
+	private void updateProjectDetails() {
+		if (Objects.isNull(curProject)) {
+			System.out.println("\nPlease select a project");
+		return;
+		}
+				
+			String projectName = getStringInput("Enter the project name ["
+					+ curProject.getProjectName() + "]");
+
+			BigDecimal estimatedHours = getDecimalInput("Enter the estimated hours ["
+					+ curProject.getEstimatedHours() + "]");
+
+			BigDecimal actualHours = getDecimalInput("Enter the actual hours ["
+					+ curProject.getActualHours() + "]");
+
+			Integer difficulty = getIntInput("Enter the project difficulty (1-5) ["
+					+ curProject.getDifficulty() + "]");
+
+			String notes = getStringInput("Enter the project notes ["
+					+ curProject.getNotes() + "]");
+				
+			Project project = new Project();
+
+			project.setProjectId(curProject.getProjectId());
+			
+			project.setProjectName(Objects.isNull(projectName)
+					? curProject.getProjectName() : projectName);
+
+			project.setEstimatedHours(Objects.isNull(estimatedHours)
+					? curProject.getEstimatedHours() : estimatedHours);
+
+			project.setActualHours(Objects.isNull(actualHours)
+					? curProject.getActualHours() : actualHours);
+
+			project.setDifficulty(Objects.isNull(difficulty)
+					? curProject.getDifficulty() : difficulty);
+
+			project.setNotes(Objects.isNull(notes)
+					? curProject.getNotes() : notes);
+				
+		projectService.modifyProjectDetails(project);
+				
+		curProject = projectService.fetchProjectById(curProject.getProjectId());
+
+		}		
+
+	
+	/**
+	 * Method that prompts user to choose a project based on project ID
+	 */
+		private void selectProject() {
+			listProjects();
+			Integer projectId = getIntInput("Enter a project ID to select a project");
+		
+		curProject = null;
+		
+		curProject = projectService.fetchProjectById(projectId);
+		}
+
+		
+		/**
+		 * Method that prints list of projects to console
+		 */
+			private void listProjects() {
+				List<Project> projects = projectService.fetchAllProjects();
+
+				System.out.println("\nProjects:");
+
+				projects.forEach(project -> System.out.println(" "
+					+ project.getProjectId() + ": " + project.getProjectName()));
+			}		
+
+			
+	/**
+	 * Receive user input for each column 
+	 * of row prompted in the project table	
 	 * then call the project service to create the row
 	 */
 	private void createProject() {
@@ -108,29 +207,11 @@ public class ProjectsApp {
 		System.out.println("You have successfully created project " + dbProject);	
 	}
 
-	private void listProjects() {
-		List<Project> projects = projectService.fetchAllProjects();
-
-		System.out.println("\nProjects:");
-
-		projects.forEach(project -> System.out.println(" "
-			+ project.getProjectId() + ": " + project.getProjectName()));
-	}
-
-	private void selectProject() {
-		listProjects();
-		Integer projectId = getIntInput("Enter a project ID to select a project");
-	
-	curProject = null;
-	
-	curProject = projectService.fetchProjectById(projectId);
-	}
-
-/**
- * Takes user input from console and converts it to BigDecimal	
- * @param prompt
- * @return
- */	
+	/**
+	 * Takes user input from console and converts it to BigDecimal	
+	 * @param prompt
+	 * @return
+	 */	
 	private BigDecimal getDecimalInput(String prompt) {
 		String input = getStringInput(prompt);
 		
@@ -146,70 +227,78 @@ public class ProjectsApp {
 		}
 	}
 
-/**
- * Called when user prompts to exit the application and
- * prints a message that app is exiting. 
- * @return to terminate app	
- */
 	
-	private boolean exitMenu() {
-		System.out.println("Exiting the menu.");
-		return true;
-	}
-
-/**
- * Method that prints available selection to console
- * Receives user selection from console
- * converts to an integer
- * @return Menu selection as an int or -1 if nothing is selected
- */
-private int getUserSelection() {
-	printOperations();
+	/**
+	 * Called when user prompts to exit the application and
+	 * prints a message that app is exiting. 
+	 * @return to terminate app	
+	 */	
+		private boolean exitMenu() {
+			System.out.println("Exiting the menu.");
+			return true;
+		}
+		
+		
+	/**
+	* Method that prints available selection to console	
+	* Receives user selection from console
+	* converts to an integer
+	* @return Menu selection as an int or -1 if nothing is selected
+	*/
+		private int getUserSelection() {
+			printOperations();
 		
 		Integer input = getIntInput("Enter a menu selection");
 		
 			return Objects.isNull(input) ? -1 : input;
 		}
-	
-/**
- * Method that prints available selection to console,
- * receives user selection from console,
- * and converts input to an integer
- * @param prompt to print
- * @return If user enters nothing, [@code null} is returned,
- *  otherwise input is converted to an integer.
- *  @throws DbException Thrown if input is not a valid integer.
- */
+
+		
+	/**
+	 * Method that prints available selection to console,
+	 * receives user selection from console,
+	 * and converts input to an integer
+	 * @param prompt to print
+	 * @return If user enters nothing, [@code null} is returned,
+	 *  otherwise input is converted to an integer.
+	 *  @throws DbException Thrown if input is not a valid integer.
+	 */
 	private Integer getIntInput(String prompt) {
 		String input = getStringInput(prompt);
 	
 		if(Objects.isNull(input)) {
 			return null;
-	}
+		}
 	
-	try {
-		return Integer.valueOf(input);
+		try {
+			return Integer.valueOf(input);
+		}
+		
+		catch(NumberFormatException e) {
+			throw new DbException(input + " is not a valid number");
+		}
 	}
-	catch(NumberFormatException e) {
-		throw new DbException(input + " is not a valid number");
-	}
-}
 
-/**
- * Method that prints available selections to console,
- * receives user selection from console.
- * If user enters nothing, {@code null} is returned
- * Otherwise, trimmed input is returned	
- * @param prompt Prompt is to print
- * @return User's input or {@code null}
- */
+	
+	/**
+	 * Method that prints available selections to console,
+	 * receives user selection from console.
+	 * If user enters nothing, {@code null} is returned
+	 * Otherwise, trimmed input is returned	
+	 * @param prompt Prompt is to print
+	 * @return User's input or {@code null}
+	 */
 	private String getStringInput(String prompt) {
 		System.out.print(prompt + ": ");
 		String input = scanner.nextLine();
 		
 		return input.isBlank() ? null : input.trim();
 	}
-
+	
+	
+	/**
+	 * Method that prompts user to make choose an operation from list 
+	 */
 	private void printOperations() {
 		System.out.println("\nThese are the available selections. Press the Enter key to quit:");
 		operations.forEach(line -> System.out.println("   " + line));
@@ -220,73 +309,13 @@ private int getUserSelection() {
 		else {
 			System.out.println("\nYou are working with project: " + curProject);
 		}
-	}
+}
 
-/**
-* Method that calls a project from database and prompts user to update
-* their input, then sends new input back to database with changes made	
-*/
-private void updateProjectDetails() {
-	if (Objects.isNull(curProject)) {
-		System.out.println("\nPlease select a project");
-	return;
-	}
-			
-		String projectName = getStringInput("Enter the project name ["
-				+ curProject.getProjectName() + "]");
 
-		BigDecimal estimatedHours = getDecimalInput("Enter the estimated hours ["
-				+ curProject.getEstimatedHours() + "]");
 
-		BigDecimal actualHours = getDecimalInput("Enter the actual hours ["
-				+ curProject.getActualHours() + "]");
 
-		Integer difficulty = getIntInput("Enter the project difficulty (1-5) ["
-				+ curProject.getDifficulty() + "]");
 
-		String notes = getStringInput("Enter the project notes ["
-				+ curProject.getNotes() + "]");
-			
-		Project project = new Project();
 
-		project.setProjectId(curProject.getProjectId());
-		
-		project.setProjectName(Objects.isNull(projectName)
-				? curProject.getProjectName() : projectName);
-
-		project.setEstimatedHours(Objects.isNull(estimatedHours)
-				? curProject.getEstimatedHours() : estimatedHours);
-
-		project.setActualHours(Objects.isNull(actualHours)
-				? curProject.getActualHours() : actualHours);
-
-		project.setDifficulty(Objects.isNull(difficulty)
-				? curProject.getDifficulty() : difficulty);
-
-		project.setNotes(Objects.isNull(notes)
-				? curProject.getNotes() : notes);
-			
-	projectService.modifyProjectDetails(project);
-			
-	curProject = projectService.fetchProjectById(curProject.getProjectId());
-
-	}	
-
-private void deleteProject() {
-	listProjects();
-	
-	Integer projectId = getIntInput("Enter a project ID to delete project");
-	
-	projectService.deleteProject(projectId);	
-	System.out.println("Project" + projectId + " has been deleted successfully");
-	
-	//check to see if project id matches
-	
-	if(Objects.nonNull(curProject) && curProject.getProjectId().equals(projectId)) {
-		curProject = null;
-
-		}		
-	}
 	
 }
 

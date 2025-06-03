@@ -1,6 +1,6 @@
 package projects.dao;
 
-import java.math.BigDecimal;
+import java.math.BigDecimal; 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,6 +16,7 @@ import projects.entity.Step;
 import projects.exception.DbException;
 import provided.util.DaoBase;
 
+
 /**
  * Class that uses JDBC to perform CRUD operations on project tables
  * @auther Promineo
@@ -28,21 +29,27 @@ public class ProjectDao extends DaoBase{
 	private static final String PROJECT_CATEGORY_TABLE = "project_category";
 	private static final String STEP_TABLE = "step";
 
-/**
- * Inserts a project row into the project table
- * @param project Project object to insert
- * @return Project object with primary key
- * @throws DbException Thrown if error occurs inserting row
- */	
+	
+	/**
+	 * Inserts a project row into the project table
+	 * @param project Project object to insert
+	 * @return Project object with primary key
+	 * @throws DbException Thrown if error occurs inserting row
+	 */	
 	public Project insertProject(Project project) {
+
 		//@formatter:off
-		String sql = ""
+		String sql = " "
 				+ "INSERT INTO " + PROJECT_TABLE + " "
 				+ "(project_name, estimated_hours, actual_hours, difficulty, notes) "
 				+ "VALUES "
 				+ "(?, ?, ?, ?, ?) ";
 		//@formatter:on
 		
+
+		/**
+		 * Set parameters to execute the returns on tables
+		 */
 		try(Connection conn = DbConnection.getConnection()) {
 			startTransaction(conn);
 			
@@ -61,20 +68,20 @@ public class ProjectDao extends DaoBase{
 			  project.setProjectId(projectId);
 			  return project;						
 			}
+			
 			catch(Exception e) {
 				rollbackTransaction(conn);
 				throw new DbException(e);
 			}
-		}
-		catch(SQLException e) {
+		}catch(SQLException e) {
 			throw new DbException(e);
 		}
 	}
 	
-/** Lists all projects from project table in order of project id
- * Assignment said to list alphabetically by project name,
- * but that looked weird
- */
+	/** Lists all projects from project table in order of project id
+	 * Assignment said to list alphabetically by project name,
+	 * but that looked weird
+	 */
 	public List<Project> fetchAllProjects() {
 		String sql = "SELECT * FROM " + PROJECT_TABLE + " ORDER BY project_id";
 	
@@ -104,10 +111,10 @@ public class ProjectDao extends DaoBase{
 
 	}
 
-/** 
- * Method that retrieves a project based on user input of project ID
- */
 
+	/** 
+	 * Method that retrieves a project based on user input of project ID
+	 */
 	public Optional<Project> fetchProjectById(Integer projectId) {
 		String sql = "SELECT * FROM " + PROJECT_TABLE + " WHERE project_id = ?";
 	
@@ -127,11 +134,11 @@ public class ProjectDao extends DaoBase{
 					}
 				}
 			
-				if(Objects.nonNull(project)) {
+				if(Objects.nonNull(project)) 
 					project.getMaterials().addAll(fetchMaterialsForProject(conn, projectId));
 					project.getSteps().addAll(fetchStepsForProject(conn, projectId));
 					project.getCategories().addAll(fetchCategoriesForProject(conn, projectId));
-				}
+			
 			
 				commitTransaction(conn);
 			
@@ -141,6 +148,7 @@ public class ProjectDao extends DaoBase{
 				rollbackTransaction(conn);
 				throw new DbException(e);
 			}
+			
 		}
 		catch(SQLException e) {
 			throw new DbException(e);
@@ -225,7 +233,13 @@ public class ProjectDao extends DaoBase{
 			}				
 	 	}		
 	}
-
+	
+/**
+* Method that retrieves project from user based on ProjectID,
+* connects to database and changes info in each column  based on user input,
+* commits new info to database,
+* checks that project exists, otherwise throws exception
+*/
 	public boolean modifyProjectDetails(Project project) {
 		// @formatter:off
 		String sql = ""
@@ -235,7 +249,7 @@ public class ProjectDao extends DaoBase{
 			+ "actual_hours = ?, "
 			+ "difficulty = ?, "
 			+ "notes = ? "
-			+ "WHERE project_id =?";
+			+ "WHERE project_id = ?";
 		//@formatter:on
 
 		try(Connection conn = DbConnection.getConnection()) {
@@ -265,6 +279,12 @@ public class ProjectDao extends DaoBase{
 			}
 		}
 
+	
+/**
+* Method that deletes a project based on user input of project ID,
+* checks that project ID exists, otherwise throws exception
+*
+*/	
 	public boolean deleteProject(Integer projectId) {
 	
 		String sql = ""
